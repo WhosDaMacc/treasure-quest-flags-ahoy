@@ -1,14 +1,52 @@
-// Update this page (the content is just a fallback if you fail to update the page)
 
-const Index = () => {
+import React, { useState } from 'react';
+import { Layout } from '@/components/Layout';
+import { FeatureFlagProvider } from '@/contexts/FeatureFlagContext';
+import { AdminScreen } from '@/pages/AdminScreen';
+import { HomeScreen } from '@/pages/HomeScreen';
+import { ProfileScreen } from '@/pages/ProfileScreen';
+import { MapScreen } from '@/pages/MapScreen';
+import { UserGeneratedContentScreen } from '@/pages/UserGeneratedContentScreen';
+import { LeaderboardScreen } from '@/pages/LeaderboardScreen';
+import { Tabs } from '@/components/ui/tabs';
+
+const Index: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('home');
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <FeatureFlagProvider>
+      <Layout>
+        <div className="min-h-screen bg-[#1A1F2C] text-white">
+          <div className="container mx-auto px-4 py-8">
+            <h1 className="text-4xl font-bold mb-8 text-center text-[#F97316]">Captain's Cache</h1>
+            
+            <Tabs 
+              defaultValue="home" 
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-3 bg-[#403E43]">
+                <TabsTrigger value="home">Home</TabsTrigger>
+                <TabsTrigger value="profile">Profile</TabsTrigger>
+                <TabsTrigger value="admin">Admin</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="home">
+                <HomeScreen />
+              </TabsContent>
+              <TabsContent value="profile">
+                <ProfileScreen />
+              </TabsContent>
+              <TabsContent value="admin">
+                <AdminScreen />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      </Layout>
+    </FeatureFlagProvider>
   );
 };
 
 export default Index;
+
