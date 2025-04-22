@@ -5,13 +5,12 @@ import { FeatureFlagProvider } from '@/contexts/FeatureFlagContext';
 import { AdminScreen } from '@/pages/AdminScreen';
 import { HomeScreen } from '@/pages/HomeScreen';
 import { ProfileScreen } from '@/pages/ProfileScreen';
-import { MapScreen } from '@/pages/MapScreen';
-import { UserGeneratedContentScreen } from '@/pages/UserGeneratedContentScreen';
-import { LeaderboardScreen } from '@/pages/LeaderboardScreen';
-import { Tabs } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useFeatureFlags } from '@/contexts/FeatureFlagContext';
 
 const Index: React.FC = () => {
   const [activeTab, setActiveTab] = useState('home');
+  const { flags } = useFeatureFlags();
 
   return (
     <FeatureFlagProvider>
@@ -49,4 +48,3 @@ const Index: React.FC = () => {
 };
 
 export default Index;
-
