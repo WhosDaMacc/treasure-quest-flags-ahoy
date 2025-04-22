@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { useFeatureFlags } from '@/contexts/FeatureFlagContext';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Puzzle, Globe, MapPin, Lightbulb, Infinity, DollarSign, Award, Diamond } from 'lucide-react';
+import { Puzzle, Globe, MapPin, Lightbulb, Infinity, DollarSign, Award, Diamond, Lock, Unlock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 export const HomeScreen: React.FC = () => {
@@ -18,7 +17,9 @@ export const HomeScreen: React.FC = () => {
       badge: "Ultimate",
       icon: <Infinity className="h-5 w-5 text-[#F97316]" />,
       rewards: "Cash + NFTs",
-      featured: true
+      featured: true,
+      isLocked: true,
+      lockReason: "Prize pool pending verification"
     },
     {
       id: 2,
@@ -28,7 +29,8 @@ export const HomeScreen: React.FC = () => {
       badge: "Physical",
       icon: <MapPin className="h-5 w-5 text-[#F97316]" />,
       rewards: "$10,000",
-      featured: true
+      featured: true,
+      isLocked: false
     },
     {
       id: 3,
@@ -38,7 +40,9 @@ export const HomeScreen: React.FC = () => {
       badge: "Virtual",
       icon: <Globe className="h-5 w-5 text-[#F97316]" />,
       rewards: "NFT Collection",
-      featured: true
+      featured: true,
+      isLocked: true,
+      lockReason: "Prize pool under review"
     }
   ];
 
@@ -99,7 +103,7 @@ export const HomeScreen: React.FC = () => {
                   <img 
                     src={hunt.image} 
                     alt={hunt.title} 
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className={`absolute inset-0 w-full h-full object-cover ${hunt.isLocked ? 'filter blur-sm' : ''}`}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
                     <div className="flex items-center mb-2">
@@ -113,12 +117,26 @@ export const HomeScreen: React.FC = () => {
                           $10M Prize
                         </Badge>
                       )}
+                      {hunt.isLocked && (
+                        <Badge variant="outline" className="ml-2 bg-red-500/20 text-red-400 border-red-500/50">
+                          <Lock className="w-3.5 h-3.5 mr-1" />
+                          Locked
+                        </Badge>
+                      )}
                     </div>
                     <h3 className="text-3xl font-bold text-white mb-2">{hunt.title}</h3>
                     <p className="text-gray-200 mb-4">{hunt.description}</p>
-                    <div className="flex items-center">
-                      <Award className="h-5 w-5 text-[#F97316] mr-2" />
-                      <span className="text-white font-medium">{hunt.rewards}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <Award className="h-5 w-5 text-[#F97316] mr-2" />
+                        <span className="text-white font-medium">{hunt.rewards}</span>
+                      </div>
+                      {hunt.isLocked && (
+                        <p className="text-red-400 text-sm flex items-center">
+                          <Lock className="w-4 h-4 mr-1" />
+                          {hunt.lockReason}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -187,12 +205,18 @@ export const HomeScreen: React.FC = () => {
       <div className="mt-8 relative overflow-hidden rounded-lg bg-gradient-to-r from-[#1A1F2C] to-[#2A2E3A] p-6 border border-[#F97316]/20">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#F97316]/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
         <div className="relative z-10">
-          <div className="flex items-center mb-4">
-            <Infinity className="h-6 w-6 text-[#F97316] mr-2" />
-            <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#F97316] to-[#FBBF24]">
-              The Ultimate Hunt
-            </h2>
-            <Badge className="ml-2 bg-[#F97316] text-white animate-pulse">$10M</Badge>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Infinity className="h-6 w-6 text-[#F97316] mr-2" />
+              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#F97316] to-[#FBBF24]">
+                The Ultimate Hunt
+              </h2>
+              <Badge className="ml-2 bg-[#F97316] text-white animate-pulse">$10M</Badge>
+            </div>
+            <Badge variant="outline" className="bg-red-500/20 text-red-400 border-red-500/50">
+              <Lock className="w-3.5 h-3.5 mr-1" />
+              Prize Pool Pending
+            </Badge>
           </div>
           <p className="text-gray-300 mb-4">
             The most extreme challenge ever created. Find the untraceable treasure hidden somewhere on Earth.
