@@ -10,6 +10,25 @@ import { HuntActions } from '@/components/HuntActions';
 import { DemoGames } from '@/components/DemoGames';
 import { useToast } from '@/hooks/use-toast';
 
+interface Hunt {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  badge: string;
+  icon: JSX.Element;
+  rewards: string;
+  featured: boolean;
+  isLocked: boolean;
+  lockReason?: string;
+  currentAmount?: number;
+  targetAmount?: number;
+  canContribute?: boolean;
+  entryFee?: number;
+  spotsLeft?: number;
+  totalSpots?: number;
+}
+
 export const HomeScreen: React.FC = () => {
   const { flags } = useFeatureFlags();
   const { toast } = useToast();
@@ -19,7 +38,7 @@ export const HomeScreen: React.FC = () => {
   const [currentJackpot, setCurrentJackpot] = useState(7850000); // $7.85M raised so far
   const jackpotProgress = (currentJackpot / ultimateHuntTarget) * 100;
 
-  const [featuredHunts, setFeaturedHunts] = useState([
+  const [featuredHunts, setFeaturedHunts] = useState<Hunt[]>([
     {
       id: 1,
       title: "The Ultimate Treasure",
@@ -114,7 +133,7 @@ export const HomeScreen: React.FC = () => {
     const hunt = featuredHunts.find(h => h.id === huntId);
     if (hunt?.id === 2) {
       setFeaturedHunts(prev => prev.map(h => 
-        h.id === huntId ? { ...h, spotsLeft: (h.spotsLeft || 0) - 1 } : h
+        h.id === huntId ? { ...h, spotsLeft: Math.max((h.spotsLeft || 0) - 1, 0) } : h
       ));
     }
   };
@@ -126,7 +145,10 @@ export const HomeScreen: React.FC = () => {
         h.id === huntId ? { 
           ...h, 
           currentAmount: Math.min((h.currentAmount || 0) + amount, ultimateHuntTarget),
-          isLocked: (h.currentAmount || 0) + amount < ultimateHuntTarget 
+          isLocked: (h.currentAmount || 0) + amount < ultimateHuntTarget,
+          lockReason: (h.currentAmount || 0) + amount < ultimateHuntTarget ? 
+            `Jackpot ${(((h.currentAmount || 0) + amount) / ultimateHuntTarget * 100).toFixed(1)}% funded` : 
+            "Ready to start"
         } : h
       ));
     }
