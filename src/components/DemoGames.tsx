@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,7 @@ interface DemoGame {
 
 export const DemoGames: React.FC = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [activeGameId, setActiveGameId] = useState<number | null>(null);
   const [games, setGames] = useState<DemoGame[]>([
     {
@@ -94,33 +95,15 @@ export const DemoGames: React.FC = () => {
   };
 
   const startGame = (gameId: number) => {
-    setActiveGameId(gameId);
-    setGames(prev => prev.map(game => 
-      game.id === gameId ? { ...game, isActive: true, progress: 10 } : game
-    ));
-    
     toast({
-      title: "Game Started!",
-      description: "Your challenge has begun. Check your first clue below.",
+      title: "Starting Challenge!",
+      description: "Taking you to the challenge page...",
     });
-
-    // Simulate progress
-    const progressInterval = setInterval(() => {
-      setGames(prev => prev.map(game => {
-        if (game.id === gameId && game.progress < 100) {
-          const newProgress = Math.min(game.progress + Math.random() * 15, 100);
-          if (newProgress >= 100) {
-            clearInterval(progressInterval);
-            toast({
-              title: "Challenge Completed!",
-              description: `Congratulations! You've earned ${game.reward}`,
-            });
-          }
-          return { ...game, progress: newProgress };
-        }
-        return game;
-      }));
-    }, 3000);
+    
+    // Navigate to the challenge page
+    setTimeout(() => {
+      navigate(`/challenge/${gameId}`);
+    }, 1000);
   };
 
   return (
@@ -165,29 +148,11 @@ export const DemoGames: React.FC = () => {
                 </div>
               </div>
 
-              {game.isActive && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-300">Progress</span>
-                    <span className="text-sm text-[#F97316] font-medium">{Math.round(game.progress)}%</span>
-                  </div>
-                  <Progress value={game.progress} className="h-2 bg-gray-700" />
-                  
-                  {game.clue && (
-                    <div className="mt-3 p-3 bg-[#2A2E3A] rounded-md border border-[#F97316]/20">
-                      <p className="text-xs text-gray-400 mb-1">Current Clue:</p>
-                      <p className="text-sm text-[#F97316] italic">{game.clue}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
               <Button 
                 className="w-full bg-[#F97316] hover:bg-[#E8660E]"
                 onClick={() => startGame(game.id)}
-                disabled={game.isActive}
               >
-                {game.isActive ? "In Progress..." : "Start Challenge"}
+                Start Challenge
               </Button>
             </CardContent>
           </Card>
