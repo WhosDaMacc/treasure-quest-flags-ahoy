@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useFeatureFlags } from '@/contexts/FeatureFlagContext';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -7,16 +6,20 @@ import { Puzzle, Globe, MapPin, Lightbulb, Infinity, DollarSign, Award, Diamond,
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { HuntActions } from '@/components/HuntActions';
+import { DemoGames } from '@/components/DemoGames';
+import { useToast } from '@/hooks/use-toast';
 
 export const HomeScreen: React.FC = () => {
   const { flags } = useFeatureFlags();
+  const { toast } = useToast();
 
   // Simulated data for the Ultimate Hunt jackpot progress
-  const ultimateHuntTarget = 10000000; // $10M target
-  const currentJackpot = 7850000; // $7.85M raised so far
+  const [ultimateHuntTarget] = useState(10000000); // $10M target
+  const [currentJackpot, setCurrentJackpot] = useState(7850000); // $7.85M raised so far
   const jackpotProgress = (currentJackpot / ultimateHuntTarget) * 100;
 
-  const featuredHunts = [
+  const [featuredHunts, setFeaturedHunts] = useState([
     {
       id: 1,
       title: "The Ultimate Treasure",
@@ -58,7 +61,7 @@ export const HomeScreen: React.FC = () => {
       isLocked: true,
       lockReason: "Prize pool under review"
     }
-  ];
+  ]);
 
   const huntTypes = [
     {
@@ -105,6 +108,28 @@ export const HomeScreen: React.FC = () => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const handleJoinHunt = (huntId: number) => {
+    const hunt = featuredHunts.find(h => h.id === huntId);
+    if (hunt?.id === 2) {
+      setFeaturedHunts(prev => prev.map(h => 
+        h.id === huntId ? { ...h, spotsLeft: (h.spotsLeft || 0) - 1 } : h
+      ));
+    }
+  };
+
+  const handleContribute = (huntId: number, amount: number) => {
+    if (huntId === 1) {
+      setCurrentJackpot(prev => Math.min(prev + amount, ultimateHuntTarget));
+      setFeaturedHunts(prev => prev.map(h => 
+        h.id === huntId ? { 
+          ...h, 
+          currentAmount: Math.min((h.currentAmount || 0) + amount, ultimateHuntTarget),
+          isLocked: (h.currentAmount || 0) + amount < ultimateHuntTarget 
+        } : h
+      ));
+    }
   };
 
   return (
@@ -160,9 +185,9 @@ export const HomeScreen: React.FC = () => {
                       <div className="mb-4">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm text-gray-300">Jackpot Progress</span>
-                          <span className="text-sm text-[#F97316] font-medium">{jackpotProgress.toFixed(1)}%</span>
+                          <span className="text-sm text-[#F97316] font-medium">{((hunt.currentAmount || 0) / (hunt.targetAmount || 1) * 100).toFixed(1)}%</span>
                         </div>
-                        <Progress value={jackpotProgress} className="h-2 bg-gray-700" />
+                        <Progress value={(hunt.currentAmount || 0) / (hunt.targetAmount || 1) * 100} className="h-2 bg-gray-700" />
                       </div>
                     )}
 
@@ -180,26 +205,11 @@ export const HomeScreen: React.FC = () => {
                         <Award className="h-5 w-5 text-[#F97316] mr-2" />
                         <span className="text-white font-medium">{hunt.rewards}</span>
                       </div>
-                      <div className="flex gap-2">
-                        {hunt.canContribute && hunt.id === 1 && (
-                          <Button size="sm" className="bg-[#F97316] hover:bg-[#E8660E]">
-                            <DollarSign className="w-4 h-4 mr-1" />
-                            Contribute
-                          </Button>
-                        )}
-                        {hunt.id === 2 && !hunt.isLocked && (
-                          <Button size="sm" className="bg-[#F97316] hover:bg-[#E8660E]">
-                            <Target className="w-4 h-4 mr-1" />
-                            Enter Hunt
-                          </Button>
-                        )}
-                        {hunt.isLocked && (
-                          <p className="text-red-400 text-sm flex items-center">
-                            <Lock className="w-4 h-4 mr-1" />
-                            {hunt.lockReason}
-                          </p>
-                        )}
-                      </div>
+                      <HuntActions 
+                        hunt={hunt} 
+                        onJoinHunt={handleJoinHunt}
+                        onContribute={handleContribute}
+                      />
                     </div>
                   </div>
                 </div>
@@ -210,6 +220,9 @@ export const HomeScreen: React.FC = () => {
           <CarouselNext className="right-2" />
         </Carousel>
       </div>
+
+      {/* Demo Games Section */}
+      <DemoGames />
 
       <div>
         <h2 className="text-2xl font-bold text-white mb-4">Hunt Types</h2>
@@ -265,6 +278,7 @@ export const HomeScreen: React.FC = () => {
         </div>
       </div>
 
+      {/* Ultimate Hunt Section */}
       <div className="mt-8 relative overflow-hidden rounded-lg bg-gradient-to-r from-[#1A1F2C] to-[#2A2E3A] p-6 border border-[#F97316]/20">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#F97316]/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
         <div className="relative z-10">
@@ -327,12 +341,19 @@ export const HomeScreen: React.FC = () => {
           </div>
 
           <div className="flex gap-3">
-            <Button className="bg-[#F97316] hover:bg-[#E8660E]">
+            <Button 
+              className="bg-[#F97316] hover:bg-[#E8660E]"
+              onClick={() => handleContribute(1, Math.floor(Math.random() * 5000) + 1000)}
+            >
               <DollarSign className="w-4 h-4 mr-2" />
               Contribute to Prize Pool
             </Button>
             {jackpotProgress >= 100 && (
-              <Button variant="outline" className="border-[#F97316] text-[#F97316] hover:bg-[#F97316] hover:text-white">
+              <Button 
+                variant="outline" 
+                className="border-[#F97316] text-[#F97316] hover:bg-[#F97316] hover:text-white"
+                onClick={() => handleJoinHunt(1)}
+              >
                 <Target className="w-4 h-4 mr-2" />
                 Enter Ultimate Hunt
               </Button>
