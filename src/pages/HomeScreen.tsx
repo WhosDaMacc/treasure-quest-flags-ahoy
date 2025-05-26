@@ -1,12 +1,20 @@
+
 import React from 'react';
 import { useFeatureFlags } from '@/contexts/FeatureFlagContext';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Puzzle, Globe, MapPin, Lightbulb, Infinity, DollarSign, Award, Diamond, Lock, Unlock } from 'lucide-react';
+import { Puzzle, Globe, MapPin, Lightbulb, Infinity, DollarSign, Award, Diamond, Lock, Unlock, Users, Clock, Target } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 
 export const HomeScreen: React.FC = () => {
   const { flags } = useFeatureFlags();
+
+  // Simulated data for the Ultimate Hunt jackpot progress
+  const ultimateHuntTarget = 10000000; // $10M target
+  const currentJackpot = 7850000; // $7.85M raised so far
+  const jackpotProgress = (currentJackpot / ultimateHuntTarget) * 100;
 
   const featuredHunts = [
     {
@@ -18,19 +26,25 @@ export const HomeScreen: React.FC = () => {
       icon: <Infinity className="h-5 w-5 text-[#F97316]" />,
       rewards: "Cash + NFTs",
       featured: true,
-      isLocked: true,
-      lockReason: "Prize pool pending verification"
+      isLocked: jackpotProgress < 100,
+      lockReason: jackpotProgress < 100 ? `Jackpot ${jackpotProgress.toFixed(1)}% funded` : "Ready to start",
+      currentAmount: currentJackpot,
+      targetAmount: ultimateHuntTarget,
+      canContribute: true
     },
     {
       id: 2,
-      title: "Mountain Mysteries",
-      description: "Explore hidden treasures in remote mountain peaks",
+      title: "Million Dollar Challenge",
+      description: "Limited to 100 elite hunters - $10,000 entry fee",
       image: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05",
-      badge: "Physical",
-      icon: <MapPin className="h-5 w-5 text-[#F97316]" />,
-      rewards: "$10,000",
+      badge: "Elite",
+      icon: <Target className="h-5 w-5 text-[#F97316]" />,
+      rewards: "$1,000,000",
       featured: true,
-      isLocked: false
+      isLocked: false,
+      entryFee: 10000,
+      spotsLeft: 23,
+      totalSpots: 100
     },
     {
       id: 3,
@@ -84,6 +98,15 @@ export const HomeScreen: React.FC = () => {
     }
   ];
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
   return (
     <div className="bg-[#2A2E3A] p-6 rounded-lg space-y-8">
       <div className="mb-8">
@@ -114,7 +137,13 @@ export const HomeScreen: React.FC = () => {
                       {hunt.id === 1 && (
                         <Badge variant="outline" className="ml-2 bg-[#F97316] text-white border-none animate-pulse">
                           <DollarSign className="w-3.5 h-3.5 mr-1" />
-                          $10M Prize
+                          {formatCurrency(hunt.currentAmount || 0)} / {formatCurrency(hunt.targetAmount || 0)}
+                        </Badge>
+                      )}
+                      {hunt.id === 2 && (
+                        <Badge variant="outline" className="ml-2 bg-[#F97316] text-white border-none">
+                          <Users className="w-3.5 h-3.5 mr-1" />
+                          {hunt.spotsLeft} spots left
                         </Badge>
                       )}
                       {hunt.isLocked && (
@@ -126,17 +155,51 @@ export const HomeScreen: React.FC = () => {
                     </div>
                     <h3 className="text-3xl font-bold text-white mb-2">{hunt.title}</h3>
                     <p className="text-gray-200 mb-4">{hunt.description}</p>
+                    
+                    {hunt.id === 1 && hunt.canContribute && (
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-gray-300">Jackpot Progress</span>
+                          <span className="text-sm text-[#F97316] font-medium">{jackpotProgress.toFixed(1)}%</span>
+                        </div>
+                        <Progress value={jackpotProgress} className="h-2 bg-gray-700" />
+                      </div>
+                    )}
+
+                    {hunt.id === 2 && hunt.entryFee && (
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-300">Entry Fee: {formatCurrency(hunt.entryFee)}</span>
+                          <span className="text-[#F97316]">{hunt.spotsLeft}/{hunt.totalSpots} spots available</span>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
                         <Award className="h-5 w-5 text-[#F97316] mr-2" />
                         <span className="text-white font-medium">{hunt.rewards}</span>
                       </div>
-                      {hunt.isLocked && (
-                        <p className="text-red-400 text-sm flex items-center">
-                          <Lock className="w-4 h-4 mr-1" />
-                          {hunt.lockReason}
-                        </p>
-                      )}
+                      <div className="flex gap-2">
+                        {hunt.canContribute && hunt.id === 1 && (
+                          <Button size="sm" className="bg-[#F97316] hover:bg-[#E8660E]">
+                            <DollarSign className="w-4 h-4 mr-1" />
+                            Contribute
+                          </Button>
+                        )}
+                        {hunt.id === 2 && !hunt.isLocked && (
+                          <Button size="sm" className="bg-[#F97316] hover:bg-[#E8660E]">
+                            <Target className="w-4 h-4 mr-1" />
+                            Enter Hunt
+                          </Button>
+                        )}
+                        {hunt.isLocked && (
+                          <p className="text-red-400 text-sm flex items-center">
+                            <Lock className="w-4 h-4 mr-1" />
+                            {hunt.lockReason}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -211,18 +274,40 @@ export const HomeScreen: React.FC = () => {
               <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#F97316] to-[#FBBF24]">
                 The Ultimate Hunt
               </h2>
-              <Badge className="ml-2 bg-[#F97316] text-white animate-pulse">$10M</Badge>
+              <Badge className="ml-2 bg-[#F97316] text-white animate-pulse">
+                {formatCurrency(currentJackpot)} / {formatCurrency(ultimateHuntTarget)}
+              </Badge>
             </div>
-            <Badge variant="outline" className="bg-red-500/20 text-red-400 border-red-500/50">
-              <Lock className="w-3.5 h-3.5 mr-1" />
-              Prize Pool Pending
-            </Badge>
+            {jackpotProgress >= 100 ? (
+              <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/50">
+                <Unlock className="w-3.5 h-3.5 mr-1" />
+                Ready to Launch!
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/50">
+                <Clock className="w-3.5 h-3.5 mr-1" />
+                Funding in Progress
+              </Badge>
+            )}
           </div>
           <p className="text-gray-300 mb-4">
             The most extreme challenge ever created. Find the untraceable treasure hidden somewhere on Earth.
-            Combining virtual and physical challenges, this hunt will test your limits.
+            Combining virtual and physical challenges, this hunt will test your limits. Anyone can contribute to the prize pool!
           </p>
-          <div className="flex flex-wrap gap-2">
+          
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-300">Prize Pool Progress</span>
+              <span className="text-sm text-[#F97316] font-medium">{jackpotProgress.toFixed(1)}% funded</span>
+            </div>
+            <Progress value={jackpotProgress} className="h-3 bg-gray-700" />
+            <div className="flex justify-between mt-1 text-xs text-gray-400">
+              <span>{formatCurrency(currentJackpot)} raised</span>
+              <span>{formatCurrency(ultimateHuntTarget - currentJackpot)} remaining</span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 mb-4">
             <Badge variant="outline" className="bg-[#0EA5E9]/10 text-[#0EA5E9] border-[#0EA5E9]">
               <MapPin className="h-3.5 w-3.5 mr-1" />
               Physical
@@ -239,6 +324,19 @@ export const HomeScreen: React.FC = () => {
               <Diamond className="h-3.5 w-3.5 mr-1" />
               NFT Rewards
             </Badge>
+          </div>
+
+          <div className="flex gap-3">
+            <Button className="bg-[#F97316] hover:bg-[#E8660E]">
+              <DollarSign className="w-4 h-4 mr-2" />
+              Contribute to Prize Pool
+            </Button>
+            {jackpotProgress >= 100 && (
+              <Button variant="outline" className="border-[#F97316] text-[#F97316] hover:bg-[#F97316] hover:text-white">
+                <Target className="w-4 h-4 mr-2" />
+                Enter Ultimate Hunt
+              </Button>
+            )}
           </div>
         </div>
       </div>
