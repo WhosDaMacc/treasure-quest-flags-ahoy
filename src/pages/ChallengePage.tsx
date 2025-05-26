@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,8 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Clock, Trophy, MapPin, Globe, Puzzle, Lightbulb, Target, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Clock, Trophy, MapPin, Globe, Puzzle, Lightbulb, Target, CheckCircle, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { BrowserMonitor } from '@/components/BrowserMonitor';
 
 interface Challenge {
   id: number;
@@ -35,6 +35,8 @@ export const ChallengePage: React.FC = () => {
   const [answer, setAnswer] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [securityViolations, setSecurityViolations] = useState<string[]>([]);
+  const [isBrowserMonitoringActive, setIsBrowserMonitoringActive] = useState(true);
 
   // Mock challenge data - in real app this would come from API
   useEffect(() => {
@@ -107,6 +109,19 @@ export const ChallengePage: React.FC = () => {
     return () => clearInterval(timer);
   }, [challenge]);
 
+  const handleSecurityViolation = (violation: string) => {
+    setSecurityViolations(prev => [...prev, `${new Date().toLocaleTimeString()}: ${violation}`]);
+    
+    // For high-stakes hunts, you could automatically disqualify or flag the participant
+    if (securityViolations.length >= 3) {
+      toast({
+        title: "Multiple Violations Detected",
+        description: "Your hunt session may be flagged for review due to suspicious activity.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'puzzle': return <Puzzle className="h-5 w-5" />;
@@ -175,6 +190,7 @@ export const ChallengePage: React.FC = () => {
   };
 
   const handleCompleteChallenge = () => {
+    setIsBrowserMonitoringActive(false);
     toast({
       title: "Challenge Completed!",
       description: `Congratulations! You've earned ${challenge?.reward}`,
@@ -210,6 +226,14 @@ export const ChallengePage: React.FC = () => {
           </div>
         </div>
 
+        {/* Browser Monitor */}
+        <div className="mb-6">
+          <BrowserMonitor 
+            isActive={isBrowserMonitoringActive && !challenge.isCompleted}
+            onViolation={handleSecurityViolation}
+          />
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Challenge Area */}
           <div className="lg:col-span-2 space-y-6">
@@ -226,6 +250,12 @@ export const ChallengePage: React.FC = () => {
                       {getTypeIcon(challenge.type)}
                       <span className="ml-1 capitalize">{challenge.type}</span>
                     </Badge>
+                    {isBrowserMonitoringActive && (
+                      <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/50">
+                        <Shield className="h-3 w-3 mr-1" />
+                        Secure Mode
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -342,6 +372,27 @@ export const ChallengePage: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Security Log */}
+            {securityViolations.length > 0 && (
+              <Card className="bg-[#403E43] border-none">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center">
+                    <Shield className="h-5 w-5 mr-2" />
+                    Security Log
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {securityViolations.slice(-5).map((violation, index) => (
+                      <div key={index} className="text-xs text-red-400 font-mono">
+                        {violation}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Notes */}
             <Card className="bg-[#403E43] border-none">
