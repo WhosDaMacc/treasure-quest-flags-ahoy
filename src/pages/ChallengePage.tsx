@@ -1,14 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Clock, Trophy, MapPin, Globe, Puzzle, Lightbulb, Target, CheckCircle, Shield } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { Puzzle, MapPin, Globe, Lightbulb } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { BrowserMonitor } from '@/components/BrowserMonitor';
+import { ChallengeHeader } from '@/components/challenge/ChallengeHeader';
+import { ChallengeInfo } from '@/components/challenge/ChallengeInfo';
+import { ClueSection } from '@/components/challenge/ClueSection';
+import { TasksSidebar } from '@/components/challenge/TasksSidebar';
+import { SecurityLog } from '@/components/challenge/SecurityLog';
+import { NotesSection } from '@/components/challenge/NotesSection';
+import { PreviousClues } from '@/components/challenge/PreviousClues';
 
 interface Challenge {
   id: number;
@@ -28,7 +30,6 @@ interface Challenge {
 
 export const ChallengePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { toast } = useToast();
   
   const [challenge, setChallenge] = useState<Challenge | null>(null);
@@ -197,7 +198,7 @@ export const ChallengePage: React.FC = () => {
     });
     
     setTimeout(() => {
-      navigate('/');
+      window.location.href = '/';
     }, 2000);
   };
 
@@ -211,20 +212,14 @@ export const ChallengePage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-[#1A1F2C] to-[#2A2E3A] text-white">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/')}
-            className="mr-4 text-gray-400 hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Hunts
-          </Button>
-          <div className="flex items-center gap-3">
-            {getTypeIcon(challenge.type)}
-            <h1 className="text-3xl font-bold text-[#F97316]">{challenge.title}</h1>
-          </div>
-        </div>
+        <ChallengeHeader
+          title={challenge.title}
+          type={challenge.type}
+          difficulty={challenge.difficulty}
+          typeIcon={getTypeIcon(challenge.type)}
+          isBrowserMonitoringActive={isBrowserMonitoringActive && !challenge.isCompleted}
+          getDifficultyColor={getDifficultyColor}
+        />
 
         {/* Browser Monitor */}
         <div className="mb-6">
@@ -238,195 +233,41 @@ export const ChallengePage: React.FC = () => {
           {/* Main Challenge Area */}
           <div className="lg:col-span-2 space-y-6">
             {/* Challenge Info */}
-            <Card className="bg-[#403E43] border-none">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-white">{challenge.title}</CardTitle>
-                  <div className="flex gap-2">
-                    <Badge variant="outline" className={getDifficultyColor(challenge.difficulty)}>
-                      {challenge.difficulty}
-                    </Badge>
-                    <Badge variant="outline" className="bg-[#F97316]/20 text-[#F97316] border-[#F97316]">
-                      {getTypeIcon(challenge.type)}
-                      <span className="ml-1 capitalize">{challenge.type}</span>
-                    </Badge>
-                    {isBrowserMonitoringActive && (
-                      <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/50">
-                        <Shield className="h-3 w-3 mr-1" />
-                        Secure Mode
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-300 mb-4">{challenge.description}</p>
-                
-                {/* Progress */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-300">Progress</span>
-                    <span className="text-sm text-[#F97316] font-medium">{challenge.progress}%</span>
-                  </div>
-                  <Progress value={challenge.progress} className="h-3 bg-gray-700" />
-                </div>
-
-                {/* Timer */}
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center text-gray-400">
-                    <Clock className="h-4 w-4 mr-1" />
-                    Time Remaining: {formatTime(challenge.timeRemaining)}
-                  </div>
-                  <div className="flex items-center text-[#DAA520]">
-                    <Trophy className="h-4 w-4 mr-1" />
-                    Reward: {challenge.reward}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <ChallengeInfo
+              challenge={challenge}
+              formatTime={formatTime}
+            />
 
             {/* Current Clue */}
-            <Card className="bg-[#403E43] border-none">
-              <CardHeader>
-                <CardTitle className="text-[#F97316] flex items-center">
-                  <Lightbulb className="h-5 w-5 mr-2" />
-                  Current Clue
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-[#2A2E3A] p-4 rounded-md border border-[#F97316]/20 mb-4">
-                  <p className="text-[#F97316] italic">{challenge.clues[challenge.currentClueIndex]}</p>
-                </div>
-                
-                {/* Answer Input */}
-                {!challenge.isCompleted && (
-                  <div className="space-y-3">
-                    <Input
-                      placeholder="Enter your answer..."
-                      value={answer}
-                      onChange={(e) => setAnswer(e.target.value)}
-                      className="bg-[#2A2E3A] border-gray-600 text-white"
-                      onKeyPress={(e) => e.key === 'Enter' && handleSubmitAnswer()}
-                    />
-                    <Button 
-                      onClick={handleSubmitAnswer}
-                      disabled={!answer.trim() || isSubmitting}
-                      className="w-full bg-[#F97316] hover:bg-[#E8660E]"
-                    >
-                      {isSubmitting ? "Checking..." : "Submit Answer"}
-                    </Button>
-                  </div>
-                )}
-
-                {challenge.isCompleted && (
-                  <div className="text-center space-y-4">
-                    <div className="flex items-center justify-center text-green-400">
-                      <CheckCircle className="h-8 w-8 mr-2" />
-                      <span className="text-xl font-bold">Challenge Completed!</span>
-                    </div>
-                    <Button 
-                      onClick={handleCompleteChallenge}
-                      className="bg-green-500 hover:bg-green-600"
-                    >
-                      <Trophy className="h-4 w-4 mr-2" />
-                      Claim Reward
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <ClueSection
+              challenge={challenge}
+              answer={answer}
+              setAnswer={setAnswer}
+              isSubmitting={isSubmitting}
+              handleSubmitAnswer={handleSubmitAnswer}
+              handleCompleteChallenge={handleCompleteChallenge}
+            />
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Tasks */}
-            <Card className="bg-[#403E43] border-none">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Target className="h-5 w-5 mr-2" />
-                  Tasks
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {challenge.tasks.map((task, index) => (
-                    <div key={index} className="flex items-center text-sm">
-                      <div className={`w-4 h-4 rounded-full mr-3 flex-shrink-0 ${
-                        index <= challenge.currentClueIndex 
-                          ? 'bg-green-500' 
-                          : index === challenge.currentClueIndex + 1 
-                            ? 'bg-[#F97316]' 
-                            : 'bg-gray-600'
-                      }`} />
-                      <span className={
-                        index <= challenge.currentClueIndex 
-                          ? 'text-green-400 line-through' 
-                          : index === challenge.currentClueIndex + 1 
-                            ? 'text-[#F97316]' 
-                            : 'text-gray-400'
-                      }>
-                        {task}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <TasksSidebar
+              tasks={challenge.tasks}
+              currentClueIndex={challenge.currentClueIndex}
+            />
 
             {/* Security Log */}
-            {securityViolations.length > 0 && (
-              <Card className="bg-[#403E43] border-none">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center">
-                    <Shield className="h-5 w-5 mr-2" />
-                    Security Log
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-1 max-h-32 overflow-y-auto">
-                    {securityViolations.slice(-5).map((violation, index) => (
-                      <div key={index} className="text-xs text-red-400 font-mono">
-                        {violation}
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <SecurityLog securityViolations={securityViolations} />
 
             {/* Notes */}
-            <Card className="bg-[#403E43] border-none">
-              <CardHeader>
-                <CardTitle className="text-white">Notes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  placeholder="Write down your thoughts, observations, or clues..."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="bg-[#2A2E3A] border-gray-600 text-white min-h-[120px]"
-                />
-              </CardContent>
-            </Card>
+            <NotesSection notes={notes} setNotes={setNotes} />
 
             {/* All Clues (unlocked ones) */}
-            <Card className="bg-[#403E43] border-none">
-              <CardHeader>
-                <CardTitle className="text-white">Previous Clues</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {challenge.clues.slice(0, challenge.currentClueIndex).map((clue, index) => (
-                    <div key={index} className="text-sm text-gray-400 italic">
-                      {index + 1}. {clue}
-                    </div>
-                  ))}
-                  {challenge.currentClueIndex === 0 && (
-                    <p className="text-sm text-gray-500">Complete tasks to unlock previous clues</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <PreviousClues
+              clues={challenge.clues}
+              currentClueIndex={challenge.currentClueIndex}
+            />
           </div>
         </div>
       </div>
