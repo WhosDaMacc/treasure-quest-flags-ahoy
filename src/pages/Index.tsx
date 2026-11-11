@@ -5,9 +5,11 @@ import { FeatureFlagProvider } from '@/contexts/FeatureFlagContext';
 import { AdminScreen } from '@/pages/AdminScreen';
 import { HomeScreen } from '@/pages/HomeScreen';
 import { ProfileScreen } from '@/pages/ProfileScreen';
+import { MapScreen } from '@/pages/MapScreen';
+import { LeaderboardScreen } from '@/pages/LeaderboardScreen';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useFeatureFlags } from '@/contexts/FeatureFlagContext';
-import { Compass, User, Settings } from 'lucide-react';
+import { Compass, User, Settings, Map, Trophy } from 'lucide-react';
 
 const Index: React.FC = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -31,13 +33,27 @@ const Index: React.FC = () => {
               className="w-full"
             >
               <div className="flex justify-center mb-8">
-                <TabsList className="grid grid-cols-3 w-full max-w-md bg-[#2A2E3A]/50 backdrop-blur-sm border border-[#F97316]/20">
+                <TabsList className="grid grid-cols-5 w-full max-w-xl bg-[#2A2E3A]/50 backdrop-blur-sm border border-[#F97316]/20">
                   <TabsTrigger 
                     value="home" 
                     className="flex items-center gap-2 data-[state=active]:bg-[#F97316] data-[state=active]:text-white"
                   >
                     <Compass size={18} />
                     <span>Hunt</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="map"
+                    className="flex items-center gap-2 data-[state=active]:bg-[#F97316] data-[state=active]:text-white"
+                  >
+                    <Map size={18} />
+                    <span>Map</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="leaderboard"
+                    className="flex items-center gap-2 data-[state=active]:bg-[#F97316] data-[state=active]:text-white"
+                  >
+                    <Trophy size={18} />
+                    <span>Leaderboard</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="profile"
@@ -59,6 +75,12 @@ const Index: React.FC = () => {
               <div className="mt-4">
                 <TabsContent value="home" className="focus-visible:outline-none">
                   <HomeScreen />
+                </TabsContent>
+                <TabsContent value="map" className="focus-visible:outline-none">
+                  <MapScreen />
+                </TabsContent>
+                <TabsContent value="leaderboard" className="focus-visible:outline-none">
+                  <LeaderboardScreen />
                 </TabsContent>
                 <TabsContent value="profile" className="focus-visible:outline-none">
                   <ProfileScreen />

@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { ChallengePage } from "./pages/ChallengePage";
+import { MapScreen } from "./pages/MapScreen";
+import { LeaderboardScreen } from "./pages/LeaderboardScreen";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +21,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/challenge/:id" element={<ChallengePage />} />
+          <Route path="/map" element={<MapScreen />} />
+          <Route path="/leaderboard" element={<LeaderboardScreen />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
