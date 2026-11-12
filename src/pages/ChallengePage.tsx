@@ -11,6 +11,12 @@ import { TasksSidebar } from '@/components/challenge/TasksSidebar';
 import { SecurityLog } from '@/components/challenge/SecurityLog';
 import { NotesSection } from '@/components/challenge/NotesSection';
 import { PreviousClues } from '@/components/challenge/PreviousClues';
+import {
+  addPointsToTotal,
+  isPiratesRealmSharingEnabled,
+  PIRATES_REALM_FALLBACK_PLAYER_NAME,
+  shareScoreToPiratesRealm,
+} from '@/lib/pirates-realm';
 
 interface Challenge {
   id: number;
@@ -20,6 +26,7 @@ interface Challenge {
   difficulty: 'Easy' | 'Medium' | 'Hard' | 'Expert';
   timeLimit: string;
   reward: string;
+  points: number;
   clues: string[];
   tasks: string[];
   currentClueIndex: number;
@@ -50,6 +57,7 @@ export const ChallengePage: React.FC = () => {
         difficulty: 'Medium',
         timeLimit: '2 hours',
         reward: '$500 + NFT',
+        points: 100,
         clues: [
           "The answer lies in the Fibonacci sequence starting from the 13th position...",
           "Each number represents a letter position in the alphabet",
@@ -73,6 +81,7 @@ export const ChallengePage: React.FC = () => {
         difficulty: 'Easy',
         timeLimit: '4 hours',
         reward: '$250',
+        points: 50,
         clues: [
           "Start at the fountain where pigeons gather at noon...",
           "The red door hiding behind ivy leads to the next clue",
@@ -196,7 +205,25 @@ export const ChallengePage: React.FC = () => {
       title: "Challenge Completed!",
       description: `Congratulations! You've earned ${challenge?.reward}`,
     });
-    
+
+    // Pirates Realm opt-in score sharing: when the player has opted in, post
+    // their new total points once for this challenge. The per-challenge
+    // marker is set before the async post so a double-click (or a revisit
+    // before the redirect) can't post the same completion twice. A failed
+    // post only logs to the console and never blocks gameplay.
+    if (challenge && isPiratesRealmSharingEnabled()) {
+      const postedKey = `treasure-quest-pirates-posted-${challenge.id}`;
+      try {
+        if (!localStorage.getItem(postedKey)) {
+          localStorage.setItem(postedKey, 'true');
+          const totalPoints = addPointsToTotal(challenge.points);
+          void shareScoreToPiratesRealm(PIRATES_REALM_FALLBACK_PLAYER_NAME, totalPoints);
+        }
+      } catch (error) {
+        console.warn('[Pirates Realm] Score share failed:', error);
+      }
+    }
+
     setTimeout(() => {
       window.location.href = '/';
     }, 2000);

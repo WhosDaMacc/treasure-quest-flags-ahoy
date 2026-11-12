@@ -1,12 +1,22 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useFeatureFlags } from '@/contexts/FeatureFlagContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Award, Puzzle, MapPin, Globe, Diamond, DollarSign, Coins } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Award, Puzzle, MapPin, Globe, Diamond, DollarSign, Coins, Flag } from 'lucide-react';
+import {
+  getTotalPoints,
+  isPiratesRealmSharingEnabled,
+  setPiratesRealmSharingEnabled,
+} from '@/lib/pirates-realm';
 
 export const ProfileScreen: React.FC = () => {
   const { flags } = useFeatureFlags();
+  const [shareToPiratesRealm, setShareToPiratesRealm] = useState(() =>
+    isPiratesRealmSharingEnabled()
+  );
+  const [totalPoints] = useState(() => getTotalPoints());
 
   const completedHunts = [
     {
@@ -75,7 +85,7 @@ export const ProfileScreen: React.FC = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-300">Total Points</span>
-              <span className="font-medium">1,250</span>
+              <span className="font-medium">{totalPoints.toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-300">Hunts Completed</span>
@@ -84,6 +94,34 @@ export const ProfileScreen: React.FC = () => {
             <div className="flex justify-between items-center">
               <span className="text-gray-300">Active Hunts</span>
               <span className="font-medium">1</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#403E43] border-none">
+          <CardHeader className="pb-2">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-[#F97316] text-lg">Pirates Realm</CardTitle>
+              <Flag className="h-5 w-5 text-[#DAA520]" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-between items-center gap-4">
+              <div>
+                <p className="text-gray-200 text-sm font-medium">Share my scores to the Pirates Realm</p>
+                <p className="text-gray-400 text-xs mt-1">
+                  When on, your total points are shared to the Pirates Realm leaderboard
+                  each time you complete a challenge. Turn it off any time to stop sharing.
+                </p>
+              </div>
+              <Switch
+                checked={shareToPiratesRealm}
+                onCheckedChange={(checked) => {
+                  setShareToPiratesRealm(checked);
+                  setPiratesRealmSharingEnabled(checked);
+                }}
+                aria-label="Share my scores to the Pirates Realm"
+              />
             </div>
           </CardContent>
         </Card>
